@@ -137,7 +137,197 @@ We acknowledge that the repo is primarily under Coinbase ownership today. This i
 * Confirm your wallet has _mainnet_ USDC.
 * Gas fees are higher on mainnet; fund the wallet with a small amount of ETH for gas.
 
+### Development and Integration
+
+#### What programming languages can I use with x402?
+
+The x402 protocol itself is language-agnostic since it uses standard HTTP. Official SDKs are available for:
+- **TypeScript/JavaScript**: Express, Next.js, Hono middleware
+- **Python**: FastAPI and Flask middleware
+
+Community implementations exist for other languages, and you can implement the protocol directly using any HTTP client library.
+
+#### How do I handle failed payments or network issues?
+
+Implement retry logic with exponential backoff:
+```javascript
+async function retryPayment(paymentFn, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await paymentFn();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+    }
+  }
+}
+```
+
+Also implement circuit breakers for facilitator connectivity issues and proper error handling for different failure modes.
+
+#### Can I use x402 with existing authentication systems?
+
+Yes! x402 payments can work alongside traditional auth:
+```javascript
+app.use('/api/premium', authenticateUser, paymentMiddleware, handler);
+```
+
+This allows you to have both authenticated users and anonymous payments, or require both authentication and payment for premium features.
+
+#### How do I test x402 integration locally?
+
+Use test networks like Base Sepolia with the test facilitator:
+```javascript
+const testConfig = {
+  network: "base-sepolia",
+  facilitator: "https://x402.org/facilitator",
+  recipient: "0x742d35Cc6554C6FaA94f0678DD7C5A4B8A6E3A1"
+};
+```
+
+Create test wallets with testnet tokens from faucets, and use them to simulate real payment flows.
+
+#### What happens if a user pays but my server is down?
+
+Payment verification happens on-chain, so payments are preserved even if your server is down. When your server comes back online:
+1. The user can retry the request with the same payment proof
+2. Your server validates the payment against the blockchain
+3. The service is provided as normal
+
+Implement idempotency to handle duplicate requests safely.
+
+### Business and Pricing
+
+#### How should I price my API endpoints?
+
+Consider these factors:
+- **Computational cost**: More expensive operations should cost more
+- **Value provided**: Charge based on the value users receive
+- **Market rates**: Research what similar services charge
+- **User behavior**: High-volume users may need different pricing
+
+Start with simple per-request pricing and iterate based on usage patterns.
+
+#### Can I implement subscription-like models with x402?
+
+Yes, several approaches work:
+- **Time-based**: Users pay for access periods (hour/day/month)
+- **Credit-based**: Users pre-purchase credits to spend over time
+- **Usage-based**: Combine payments with rate limiting for fair usage
+
+See the [Implementation Patterns](guides/implementation-patterns.md) guide for detailed examples.
+
+#### How do I handle refunds or disputes?
+
+x402 payments are on-chain transactions that cannot be automatically reversed. For refunds:
+1. Implement a separate refund system in your application
+2. Send refunds to the original payment address
+3. Keep detailed transaction logs for dispute resolution
+4. Consider escrow systems for high-value services
+
+#### Can I do partial payments or installments?
+
+Yes, you can implement various payment structures:
+- **Staged payments**: Charge different amounts for different service phases
+- **Micro-subscriptions**: Very small recurring payments
+- **Usage tracking**: Accumulate usage and charge periodically
+
+The key is designing your application logic to handle these patterns.
+
+### Technical Operations
+
+#### How do I monitor payment success rates?
+
+Implement comprehensive logging and metrics:
+```javascript
+// Track payment metrics
+const paymentMetrics = {
+  attempts: 0,
+  successes: 0,
+  failures: 0,
+  averageTime: 0
+};
+
+function logPaymentAttempt(success, duration) {
+  paymentMetrics.attempts++;
+  if (success) paymentMetrics.successes++;
+  else paymentMetrics.failures++;
+
+  // Update rolling average
+  paymentMetrics.averageTime =
+    (paymentMetrics.averageTime + duration) / 2;
+}
+```
+
+Monitor facilitator response times, payment verification success rates, and user completion funnels.
+
+#### What's the best way to handle high-volume payments?
+
+For high traffic:
+1. **Load balancing**: Distribute payment processing across multiple servers
+2. **Caching**: Cache payment verifications temporarily to reduce facilitator calls
+3. **Async processing**: Queue payment verifications for non-critical paths
+4. **Rate limiting**: Implement smart rate limiting to prevent abuse
+5. **Database optimization**: Index payment-related data properly
+
+#### How do I handle different blockchain networks?
+
+Configure network-specific settings:
+```javascript
+const networkConfigs = {
+  'ethereum': { chainId: 1, facilitator: 'https://mainnet-facilitator.x402.org' },
+  'base': { chainId: 8453, facilitator: 'https://base-facilitator.x402.org' },
+  'arbitrum': { chainId: 42161, facilitator: 'https://arbitrum-facilitator.x402.org' }
+};
+
+function getNetworkConfig(network) {
+  return networkConfigs[network] || networkConfigs['base'];
+}
+```
+
+Consider gas costs, confirmation times, and user preferences when choosing networks.
+
+#### How secure is x402?
+
+x402 inherits the security properties of the underlying blockchain:
+- **Payment proofs** are cryptographically signed and verifiable
+- **Facilitators** cannot steal funds or forge payments
+- **Double-spending** is prevented by blockchain consensus
+- **Privacy** depends on the chosen blockchain's privacy features
+
+Follow security best practices in the [Security Guide](guides/security-best-practices.md) for additional protection.
+
+### Troubleshooting Common Issues
+
+#### "Payment verification failed" - what does this mean?
+
+Common causes and solutions:
+1. **Network mismatch**: Ensure client and server use the same network
+2. **Expired payment**: Check if payment was submitted within the timeout window
+3. **Invalid signature**: Verify the wallet is signing transactions correctly
+4. **Facilitator issues**: Check facilitator status and connectivity
+
+See the [Troubleshooting Guide](guides/troubleshooting.md) for detailed debugging steps.
+
+#### My middleware isn't triggering payments
+
+Check these common issues:
+1. **Middleware order**: Payment middleware must be registered before route handlers
+2. **Route matching**: Ensure your route patterns match exactly
+3. **HTTP methods**: Verify GET/POST methods are configured correctly
+4. **Network configuration**: Confirm you're using the right network and facilitator URL
+
+#### Payments are slow - how can I optimize?
+
+Performance optimization strategies:
+1. **Choose faster networks**: Base and Arbitrum have lower latency than Ethereum
+2. **Optimize gas prices**: Use dynamic gas pricing for faster confirmations
+3. **Cache verifications**: Temporarily cache payment proofs to avoid re-verification
+4. **Async processing**: Don't block user experience waiting for blockchain confirmation
+
 ### Still have questions?
 
 • Reach out in the [Discord channel](https://discord.gg/invite/cdp)\
-• Open a GitHub Discussion or Issue in the [x402 repo](https://github.com/coinbase/x402)
+• Open a GitHub Discussion or Issue in the [x402 repo](https://github.com/coinbase/x402)\
+• Check the [Troubleshooting Guide](guides/troubleshooting.md) for technical issues\
+• Review [Implementation Patterns](guides/implementation-patterns.md) for design guidance
