@@ -69,7 +69,7 @@ Full example in the repo [here](https://github.com/ethanniser/x402-mcp/tree/main
 
 ```bash
 pip install x402
-pip install cdp # for the mainnet facilitator
+pip install cdp-sdk # for the mainnet facilitator
 ```
 {% endtab %}
 {% endtabs %}
