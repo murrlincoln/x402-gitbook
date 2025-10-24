@@ -52,7 +52,19 @@ pip install x402
 #### Create a Wallet Client
 
 {% tabs %}
-{% tab title="Node.js (viem)" %}
+{% tab title="Node.js - Fetch " %}
+
+Instantiate the signer:
+
+```typescript
+import { createSigner } from "x402-fetch";
+
+// Create a signer (using your private key)
+const signer = await createSigner("base-sepolia", "0xYourPrivateKey"); // we recommend using an environment variable for this
+```
+{% endtab %}
+
+{% tab title="Node.js - Axios (viem)" %}
 Install the required package:
 
 ```bash
@@ -113,12 +125,12 @@ You can use either `x402-fetch` or `x402-axios` to automatically handle 402 Paym
 **x402-fetch** extends the native `fetch` API to handle 402 responses and payment headers for you. [Full example here](https://github.com/coinbase/x402/tree/main/examples/typescript/clients/fetch)
 
 ```typescript
-import { wrapFetchWithPayment, decodeXPaymentResponse } from "x402-fetch";
+import { wrapFetchWithPayment, decodeXPaymentResponse, createSigner } from "x402-fetch";
 // other imports...
 
-// wallet creation logic...
+// signer creation logic...
 
-const fetchWithPayment = wrapFetchWithPayment(fetch, account);
+const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
 
 fetchWithPayment(url, { //url should be something like https://api.example.com/paid-endpoint
   method: "GET",
