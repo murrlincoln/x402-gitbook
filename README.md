@@ -74,5 +74,5 @@ Ready to build? Start here:
 
 * [Quickstart for Sellers](getting-started/quickstart-for-sellers.md)
 * [Quickstart for Buyers](getting-started/quickstart-for-buyers.md)
-* [Explore Core Concepts](broken-reference)
+* [Explore Core Concepts](core-concepts/README.md)
 * [Join our community on Discord](https://discord.gg/invite/cdp)
