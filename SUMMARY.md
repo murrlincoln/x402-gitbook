@@ -23,3 +23,6 @@
 ## Guides
 
 * [MCP Server with x402](guides/mcp-server-with-x402.md)
+* [Implementation Patterns](guides/implementation-patterns.md)
+* [Security Best Practices](guides/security-best-practices.md)
+* [Troubleshooting](guides/troubleshooting.md)
