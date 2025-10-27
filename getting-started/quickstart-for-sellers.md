@@ -44,6 +44,7 @@ Install the [x402 Hono middleware package](https://www.npmjs.com/package/x402-ho
 ```bash
 npm install x402-hono
 npm install @coinbase/x402 # for the mainnet facilitator
+npm install @hono/node-server
 ```
 {% endtab %}
 
