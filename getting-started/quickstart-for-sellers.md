@@ -140,7 +140,7 @@ export const middleware = paymentMiddleware(
         description: 'Access to protected content'
       }
     },
-  }
+  },
   {
     url: "https://x402.org/facilitator", // Facilitator URL for Base Sepolia testnet.
   }
